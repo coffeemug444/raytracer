@@ -6,20 +6,19 @@
 #include <iostream>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window);
+void processInput(GLFWwindow *window, float deltaTime);
 void keyCallback(GLFWwindow* window, int key, int, int action, int);
 void mouse_callback(GLFWwindow*, double xpos, double ypos);
 
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
-float fov = 1.5708 / 2.f;
+float fov = M_PI / 2.f;
 
 Camera camera(glm::vec3(0.0f, 0.0f, 1.0f));
 float lastX, lastY;
 bool firstMouse = true;
 
 // timing
-float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 GLFWwindow* initWindow()
@@ -90,10 +89,10 @@ int main()
     while (!glfwWindowShouldClose(window))
     {
 		float currentFrame = glfwGetTime();
-		deltaTime = currentFrame - lastFrame;
+		float deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-        processInput(window);
+        processInput(window, deltaTime);
 
         
 		shaderProgram.setFloat("screenWidth", (float)SCR_WIDTH);
@@ -128,6 +127,7 @@ void mouse_callback(GLFWwindow*, double xpos, double ypos)
 		lastX = xpos;
 		lastY = ypos;
 		firstMouse = false;
+        return;
 	}
 
 	float xoffset = (xpos - lastX);
@@ -139,7 +139,7 @@ void mouse_callback(GLFWwindow*, double xpos, double ypos)
 	camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
-void processInput(GLFWwindow *window)
+void processInput(GLFWwindow *window, float deltaTime)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
