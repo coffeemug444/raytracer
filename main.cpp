@@ -124,9 +124,13 @@ int main()
 		shaderProgram.setMat3("view", camera.GetViewMatrix());
 		shaderProgram.setVec3("camPos", camera.Position);
         shaderProgram.setFloat("UniformRandomSeed", dist(gen));
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 100; i++) {
             mySphere.center.x = 10*i;
+            float offset = 0.1f*i*i;
+            mySphere.center.y = offset * std::sin(currentFrame * 0.001f*i*i);
+            mySphere.center.z = 5 + offset * std::cos(currentFrame*0.001f*i*i);
             shaderProgram.setSphere("Spheres", i, mySphere);
+
         }
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -162,6 +166,7 @@ void mouse_callback(GLFWwindow*, double xpos, double ypos)
 
 	lastX = xpos;
 	lastY = ypos;
+
 
 	camera.ProcessMouseMovement(xoffset, yoffset);
 }
