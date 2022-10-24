@@ -105,7 +105,7 @@ int main()
 		shaderProgram.setFloat("fov", fov);
 		shaderProgram.setMat3("view", camera.GetViewMatrix());
 		shaderProgram.setVec3("camPos", camera.Position);
-        shaderProgram.setFloat("random", dist(gen));
+        shaderProgram.setFloat("UniformRandomSeed", dist(gen));
 
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);

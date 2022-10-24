@@ -1,8 +1,51 @@
 #version 460 core
 uniform vec3 camPos;
-uniform float random;
+uniform float UniformRandomSeed;
 in vec3 rayDir;
 out vec4 FragColor;
+float randomSeed;
+
+float rng() {
+   randomSeed = abs(fract(sin(dot(rayDir, vec3(12.9898,78.233,58.5453)))*(randomSeed*100000)));
+   return randomSeed;
+}
+
+// randomly returns true with probability provided
+bool prob_b(float probability) {
+   return rng() < probability;
+}
+
+float prob_f(float probability) {
+   return prob_b(probability) ? 1.0f : 0.0f;
+}
+
+vec4 quat_mult(vec4 q1, vec4 q2)
+{ 
+  vec4 qr;
+  qr.x = (q1.w * q2.x) + (q1.x * q2.w) + (q1.y * q2.z) - (q1.z * q2.y);
+  qr.y = (q1.w * q2.y) - (q1.x * q2.z) + (q1.y * q2.w) + (q1.z * q2.x);
+  qr.z = (q1.w * q2.z) + (q1.x * q2.y) - (q1.y * q2.x) + (q1.z * q2.w);
+  qr.w = (q1.w * q2.w) - (q1.x * q2.x) - (q1.y * q2.y) - (q1.z * q2.z);
+  return qr;
+}
+
+vec3 rotate(vec3 point, vec3 axis, float angle) {
+   float half_angle = angle * 0.5f;
+   float sin_HA = sin(half_angle);
+   float cos_HA = cos(half_angle);
+   vec4 q = normalize(vec4(sin_HA*axis, cos_HA));
+   vec4 p = vec4(point, 0.0f);
+   vec4 qi = vec4(-q.xyz, q.w);
+   return quat_mult(quat_mult(q,p), qi).xyz;
+}
+
+vec3 randomVec_rad(vec3 input_vec, float rads) {
+   // returns a random vector within `rads` radians of input_vec
+   float rotation = rads * (1-2*rng());
+   vec3 perp = normalize(cross(input_vec, vec3(rng(),rng(),rng())));
+
+   return rotate(input_vec, perp, rads);
+}
 
 struct Ray {
    vec3 origin;
@@ -25,6 +68,7 @@ struct Sphere {
 struct Hit {
    bool hit;
    float dist;
+   bool stopped;
    Ray nextRay;
 };
 
@@ -49,6 +93,10 @@ Hit intersect(Ray ray, Sphere sphere) {
    } else {
       hit.dist = max(t1, t2);
    }
+
+
+
+
    hit.nextRay.origin = hit.dist*ray.dir;
    vec3 norm = normalize(hit.nextRay.origin - sphere.center);
    hit.nextRay.dir = normalize(reflect(hit.nextRay.origin, norm));
@@ -70,16 +118,20 @@ Sphere mySphere = {
    2.f
 };
 
+
+
 void main()
 {
+   randomSeed = UniformRandomSeed;
    Ray ray = { camPos, rayDir };
 
    Hit d = intersect(ray, mySphere);
 
    if (d.hit) {
-      FragColor = vec4(d.nextRay.dir.x, d.nextRay.dir.y, 0.2f, 1.0f);
+      vec3 randvec = randomVec_rad(d.nextRay.dir, 0.5);
+      FragColor = vec4(randvec.xy, 0.2f, 1.0f);
    } else {
-      FragColor = vec4(rayDir.x, rayDir.y, 0.2f, 1.0f);
+      FragColor = vec4(prob_f(rayDir.x),rayDir.y, 0.2f, 1.0f);
    }
 
    
