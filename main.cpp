@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include "shader.h"
 #include "camera.h"
+#include <random>
 
 #include <iostream>
 
@@ -12,7 +13,7 @@ void mouse_callback(GLFWwindow*, double xpos, double ypos);
 
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
-float fov = M_PI / 2.f;
+float fov = M_PI / 4.f;
 
 Camera camera(glm::vec3(0.0f, 0.0f, 1.0f));
 float lastX, lastY;
@@ -80,8 +81,11 @@ void initQuad(unsigned int& VBO, unsigned int& VAO)
 int main()
 {
     GLFWwindow* window = initWindow();
+    Shader shaderProgram("shader.vert", "shader.frag");
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
-    Shader shaderProgram("vertex.glsl", "fragment.glsl");
 
     unsigned int VBO, VAO;
     initQuad(VBO, VAO);
@@ -95,11 +99,13 @@ int main()
         processInput(window, deltaTime);
 
         
+        
 		shaderProgram.setFloat("screenWidth", (float)SCR_WIDTH);
 		shaderProgram.setFloat("screenHeight", (float)SCR_HEIGHT);
 		shaderProgram.setFloat("fov", fov);
 		shaderProgram.setMat3("view", camera.GetViewMatrix());
 		shaderProgram.setVec3("camPos", camera.Position);
+        shaderProgram.setFloat("random", dist(gen));
 
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -151,10 +157,13 @@ void processInput(GLFWwindow *window, float deltaTime)
 		camera.ProcessKeyboard(LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.ProcessKeyboard(RIGHT, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
-		fov = fov * (deltaTime + 1);
-	if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
-		fov = fov / (deltaTime + 1);
+	if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) {
+        float newFov = fov * (deltaTime + 1);
+        if (newFov < M_PI) fov = newFov;
+    }
+	if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS){
+        fov /= (deltaTime + 1);
+    }
 }
 
 void keyCallback(GLFWwindow* window, int key, int, int action, int)
