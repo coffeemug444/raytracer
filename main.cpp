@@ -3,6 +3,7 @@
 #include "shader.h"
 #include "camera.h"
 #include <random>
+#include "shader_types.h"
 
 #include <iostream>
 
@@ -78,6 +79,22 @@ void initQuad(unsigned int& VBO, unsigned int& VAO)
     glBindVertexArray(0); 
 }
 
+Sphere mySphere = {
+   {
+      {
+         1.f, 0.8f, 0.2f
+      },
+      1.0f,
+      0.0f,
+      1.f
+   },
+   {
+      10.0f, 0.f, 5.0f
+   },
+   2.f
+};
+
+
 int main()
 {
     GLFWwindow* window = initWindow();
@@ -87,8 +104,11 @@ int main()
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
 
+
+
     unsigned int VBO, VAO;
     initQuad(VBO, VAO);
+
 
     while (!glfwWindowShouldClose(window))
     {
@@ -98,15 +118,16 @@ int main()
 
         processInput(window, deltaTime);
 
-        
-        
 		shaderProgram.setFloat("screenWidth", (float)SCR_WIDTH);
 		shaderProgram.setFloat("screenHeight", (float)SCR_HEIGHT);
 		shaderProgram.setFloat("fov", fov);
 		shaderProgram.setMat3("view", camera.GetViewMatrix());
 		shaderProgram.setVec3("camPos", camera.Position);
         shaderProgram.setFloat("UniformRandomSeed", dist(gen));
-
+        for (int i = 0; i < 10; i++) {
+            mySphere.center.x = 10*i;
+            shaderProgram.setSphere("Spheres", i, mySphere);
+        }
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -159,7 +180,7 @@ void processInput(GLFWwindow *window, float deltaTime)
 		camera.ProcessKeyboard(RIGHT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) {
         float newFov = fov * (deltaTime + 1);
-        if (newFov < M_PI) fov = newFov;
+        if (newFov < M_PI / 2) fov = newFov;
     }
 	if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS){
         fov /= (deltaTime + 1);

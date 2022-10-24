@@ -1,9 +1,38 @@
 #version 460 core
+
+struct Ray {
+   vec3 origin;
+   vec3 dir;
+};
+
+struct Material {
+   vec3 color;
+   float roughness;
+   float transparency;
+   float density;
+};
+
+struct Sphere {
+   Material material;
+   vec3 center;
+   float radius;
+};
+
+struct Hit {
+   bool hit;
+   float dist;
+   bool stopped;
+   Ray nextRay;
+};
+
+uniform Sphere Spheres[10];
 uniform vec3 camPos;
 uniform float UniformRandomSeed;
 in vec3 rayDir;
 out vec4 FragColor;
 float randomSeed;
+
+
 
 float rng() {
    randomSeed = abs(fract(sin(dot(rayDir, vec3(12.9898,78.233,58.5453)))*(randomSeed*100000)));
@@ -47,33 +76,6 @@ vec3 randomVec_rad(vec3 input_vec, float rads) {
    return rotate(input_vec, perp, rads);
 }
 
-struct Ray {
-   vec3 origin;
-   vec3 dir;
-};
-
-struct Material {
-   vec3 color;
-   float roughness;
-   float transparency;
-   float density;
-};
-
-struct Sphere {
-   Material material;
-   vec3 center;
-   float radius;
-};
-
-struct Hit {
-   bool hit;
-   float dist;
-   bool stopped;
-   Ray nextRay;
-};
-
-
-
 Hit intersect(Ray ray, Sphere sphere) {
    Hit hit;
    hit.hit = false;
@@ -93,31 +95,12 @@ Hit intersect(Ray ray, Sphere sphere) {
    } else {
       hit.dist = max(t1, t2);
    }
-
-
-
-
+   
    hit.nextRay.origin = hit.dist*ray.dir;
    vec3 norm = normalize(hit.nextRay.origin - sphere.center);
-   hit.nextRay.dir = normalize(reflect(hit.nextRay.origin, norm));
+   hit.nextRay.dir = normalize(reflect(ray.dir, norm));
    return hit;
 }
-
-Sphere mySphere = {
-   {
-      {
-         1.f, 0.8f, 0.2f
-      },
-      1.0f,
-      0.0f,
-      1.f
-   },
-   {
-      10.0f, 0.f, 5.0f
-   },
-   2.f
-};
-
 
 
 void main()
@@ -125,14 +108,20 @@ void main()
    randomSeed = UniformRandomSeed;
    Ray ray = { camPos, rayDir };
 
-   Hit d = intersect(ray, mySphere);
+   Hit d;
+   d.dist = 100000000000000.f;
+   d.hit = false;
+   
+   for (int i = 0; i < 10; i++) {
+      Hit newD = intersect(ray, Spheres[i]);
+      if (!newD.hit) continue;
+      if (newD.dist < d.dist) d = newD;
+   }
 
    if (d.hit) {
       vec3 randvec = randomVec_rad(d.nextRay.dir, 0.5);
-      FragColor = vec4(randvec.xy, 0.2f, 1.0f);
+      FragColor = vec4(d.nextRay.dir.xy,0.2f, 1.0f);
    } else {
-      FragColor = vec4(prob_f(rayDir.x),rayDir.y, 0.2f, 1.0f);
+      FragColor = vec4(rayDir.xy, 0.2f, 1.0f);
    }
-
-   
 }

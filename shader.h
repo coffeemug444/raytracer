@@ -10,6 +10,8 @@
 
 #include <glm/glm.hpp>
 
+#include "shader_types.h"
+
 class Shader
 {
 public:
@@ -124,6 +126,22 @@ public:
 	{
 		glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
 	}
+
+    void setSphere(const std::string &name, const Sphere &sphere)
+    {
+        setVec3(name + ".material.color", sphere.material.color);
+        setFloat(name + ".material.roughness", sphere.material.roughness);
+        setFloat(name + ".material.transparency", sphere.material.transparency);
+        setFloat(name + ".material.density", sphere.material.density);
+        setVec3(name + ".center", sphere.center);
+        setFloat(name + ".radius", sphere.radius);
+    }
+    
+    void setSphere(const std::string &name, int i, const Sphere &sphere)
+    {
+        std::string indexed_name = name + '[' + std::to_string(i) + ']';
+        setSphere(indexed_name, sphere);
+    }
 
 private:
     void checkCompileErrors(unsigned int shader, std::string type)
