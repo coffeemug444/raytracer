@@ -7,6 +7,8 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <vector>
+#include <algorithm>
 
 #include <glm/glm.hpp>
 
@@ -14,61 +16,59 @@
 
 class Shader
 {
+private:
+    std::vector<GLuint> shaderIds;
+    bool linked = false;
 public:
     unsigned int ID;
-    Shader(const char* vertexPath, const char* fragmentPath)
+    Shader()
     {
-        std::string vertexCode;
-        std::string fragmentCode;
-        std::ifstream vShaderFile;
-        std::ifstream fShaderFile;
-        vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
-        fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+        ID = glCreateProgram();
+    }
+
+    void addShader(GLuint shaderType, const char* path)
+    {
+        if (linked)
+        {
+            std::cout << "ERROR::SHADER::PROGRAM_ALREADY_LINKED" << std::endl;
+            return;
+        }
+
+        std::string code;
+        std::ifstream shaderFile;
+        shaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);        
         try 
         {
-            vShaderFile.open(vertexPath);
-            fShaderFile.open(fragmentPath);
-            std::stringstream vShaderStream, fShaderStream;
-            vShaderStream << vShaderFile.rdbuf();
-            fShaderStream << fShaderFile.rdbuf();
-            vShaderFile.close();
-            fShaderFile.close();
-            vertexCode   = vShaderStream.str();
-            fragmentCode = fShaderStream.str();
+            shaderFile.open(path);
+            std::stringstream shaderStream;
+            shaderStream << shaderFile.rdbuf();
+            shaderFile.close();
+            code = shaderStream.str();
         }
         catch (std::ifstream::failure& e)
         {
             std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: " << e.what() << std::endl;
         }
-        const char* vShaderCode = vertexCode.c_str();
-        const char * fShaderCode = fragmentCode.c_str();
-        unsigned int vertex, fragment;
 
-        vertex = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertex, 1, &vShaderCode, NULL);
-        glCompileShader(vertex);
-        checkCompileErrors(vertex, "VERTEX");
+        const char* shaderCode = code.c_str();
+        unsigned int shaderId;
 
-        fragment = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragment, 1, &fShaderCode, NULL);
-        glCompileShader(fragment);
-        checkCompileErrors(fragment, "FRAGMENT");
+        shaderId = glCreateShader(shaderType);
+        glShaderSource(shaderId, 1, &shaderCode, NULL);
+        glCompileShader(shaderId);
+        checkCompileErrors(
+            shaderId, 
+            (shaderType == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT"
+        );
 
-        ID = glCreateProgram();
-        glAttachShader(ID, vertex);
-        glAttachShader(ID, fragment);
-        glLinkProgram(ID);
-        checkCompileErrors(ID, "PROGRAM");
-
-        glDeleteShader(vertex);
-        glDeleteShader(fragment);
+        shaderIds.push_back(shaderId);
     }
-    
+
     void use() 
     { 
+        link();
         glUseProgram(ID); 
     }
-    
     
 	void setBool(const std::string &name, bool value) const
 	{
@@ -144,6 +144,24 @@ public:
     }
 
 private:
+    void link()
+    {
+        if (linked) return;
+        ID = glCreateProgram();
+        for (auto id : shaderIds)
+        {
+            glAttachShader(ID, id);
+        }
+        glLinkProgram(ID);
+        checkCompileErrors(ID, "PROGRAM");
+        for (auto id : shaderIds)
+        {
+            glDeleteShader(id);
+        }
+        shaderIds.clear();
+        linked = true;
+    }
+
     void checkCompileErrors(unsigned int shader, std::string type)
     {
         int success;

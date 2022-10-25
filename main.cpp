@@ -14,7 +14,7 @@ void mouse_callback(GLFWwindow*, double xpos, double ypos);
 
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
-float fov = M_PI / 4.f;
+float fov = M_PI / 2.f;
 
 Camera camera(glm::vec3(0.0f, 0.0f, 1.0f));
 float lastX, lastY;
@@ -98,7 +98,10 @@ Sphere mySphere = {
 int main()
 {
     GLFWwindow* window = initWindow();
-    Shader shaderProgram("shader.vert", "shader.frag");
+    Shader shaderProgram;
+    shaderProgram.addShader(GL_VERTEX_SHADER, "shader.vert");
+    shaderProgram.addShader(GL_FRAGMENT_SHADER, "random.frag");
+    shaderProgram.addShader(GL_FRAGMENT_SHADER, "shader.frag");
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
@@ -125,7 +128,7 @@ int main()
 		shaderProgram.setVec3("camPos", camera.Position);
         shaderProgram.setFloat("UniformRandomSeed", dist(gen));
         for (int i = 0; i < 100; i++) {
-            mySphere.center.x = 10*i;
+            mySphere.center.x = 6*i;
             float offset = 0.1f*i*i;
             mySphere.center.y = offset * std::sin(currentFrame * 0.001f*i*i);
             mySphere.center.z = 5 + offset * std::cos(currentFrame*0.001f*i*i);

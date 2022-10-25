@@ -32,6 +32,17 @@ uniform float UniformRandomSeed;
 in vec3 rayDir;
 out vec4 FragColor;
 float randomSeed;
+const float delta = 0.00001f;
+const float PI = 3.14159265359;
+const float PI_2 = 6.28318530718;
+
+// RANDOM.FRAG
+float rng();
+float normal_rng();
+bool prob_b(float probability);
+float prob_f(float probability);
+vec3 randomVec_rad(vec3 input_vec, float rads);
+
 
 const vec3 coolblue = vec3(0.545, 0.714, 0.988);
 const vec3 darkerblue = 0.4*coolblue;
@@ -62,21 +73,6 @@ vec3 backgroundColor(vec3 rayDir) {
    }
 }
 
-
-float rng() {
-   randomSeed = abs(fract(sin(dot(rayDir, vec3(12.9898,78.233,58.5453)))*(randomSeed*100000)));
-   return randomSeed;
-}
-
-// randomly returns true with probability provided
-bool prob_b(float probability) {
-   return rng() < probability;
-}
-
-float prob_f(float probability) {
-   return prob_b(probability) ? 1.0f : 0.0f;
-}
-
 vec4 quat_mult(vec4 q1, vec4 q2)
 { 
   vec4 qr;
@@ -95,14 +91,6 @@ vec3 rotate(vec3 point, vec3 axis, float angle) {
    vec4 p = vec4(point, 0.0f);
    vec4 qi = vec4(-q.xyz, q.w);
    return quat_mult(quat_mult(q,p), qi).xyz;
-}
-
-vec3 randomVec_rad(vec3 input_vec, float rads) {
-   // returns a random vector within `rads` radians of input_vec
-   float rotation = rads * (1-2*rng());
-   vec3 perp = normalize(cross(input_vec, vec3(rng(),rng(),rng())));
-
-   return rotate(input_vec, perp, rads);
 }
 
 Hit intersect_sphere(Ray ray, Sphere sphere) {
@@ -129,7 +117,11 @@ Hit intersect_sphere(Ray ray, Sphere sphere) {
    hit.nextRay.origin = ray.origin + hit.dist*ray.dir;
    vec3 norm = (hit.nextRay.origin - sphere.center)/sphere.radius;
    hit.nextRay.dir = reflect(ray.dir, norm);
-   hit.material.color = backgroundColor(hit.nextRay.dir);
+   //hit.nextRay.dir = randomVec_rad(hit.nextRay.dir, 0.1);
+   hit.material.color = backgroundColor(randomVec_rad(hit.nextRay.dir, 0.1));
+
+   hit.nextRay.origin += 20*delta*norm;
+   hit.stopped = true;
    return hit;
 }
 
@@ -159,8 +151,13 @@ void main()
    Ray ray = { camPos, normalize(rayDir) };
    const int NUM_ITERATIONS = 5;
 
-   Hit d = do_intersections(ray);
+   Hit d;
+   d.nextRay = ray;
+   for (int i = 0; i < NUM_ITERATIONS; i++) {
+      d = do_intersections(d.nextRay);
+      if (d.stopped) break;
+   }
 
-   //vec3 randvec = randomVec_rad(d.nextRay.dir, 0.5);
+   
    FragColor = vec4(d.material.color, 1.0f);
 }
