@@ -1,9 +1,3 @@
-#version 460 core
-in vec3 rayDir;
-float randomSeed;
-float PI_2;
-vec3 rotate(vec3 point, vec3 axis, float angle);
-
 float rng() {
    randomSeed = abs(fract(sin(dot(rayDir, vec3(12.9898,78.233,58.5453)))*(randomSeed*100000)));
    return randomSeed;

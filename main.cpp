@@ -98,10 +98,10 @@ Sphere mySphere = {
 int main()
 {
     GLFWwindow* window = initWindow();
-    Shader shaderProgram;
-    shaderProgram.addShader(GL_VERTEX_SHADER, "shader.vert");
-    shaderProgram.addShader(GL_FRAGMENT_SHADER, "random.frag");
-    shaderProgram.addShader(GL_FRAGMENT_SHADER, "shader.frag");
+    Shader shaderProgram("shaders/HEADER.frag");
+    shaderProgram.addShader(GL_VERTEX_SHADER, "shaders/shader.vert");
+    shaderProgram.addShader(GL_FRAGMENT_SHADER, "shaders/random.frag");
+    shaderProgram.addShader(GL_FRAGMENT_SHADER, "shaders/shader.frag");
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);

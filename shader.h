@@ -18,12 +18,18 @@ class Shader
 {
 private:
     std::vector<GLuint> shaderIds;
+    std::string frag_header;
     bool linked = false;
 public:
     unsigned int ID;
-    Shader()
+    Shader(const char* fragHeaderPath)
     {
-        ID = glCreateProgram();
+        std::ifstream file;
+        file.open(fragHeaderPath);
+        std::stringstream headerStream;
+        headerStream << file.rdbuf();
+        file.close();
+        frag_header = headerStream.str();
     }
 
     void addShader(GLuint shaderType, const char* path)
@@ -43,7 +49,14 @@ public:
             std::stringstream shaderStream;
             shaderStream << shaderFile.rdbuf();
             shaderFile.close();
-            code = shaderStream.str();
+            if (shaderType == GL_FRAGMENT_SHADER)
+            {
+                code = frag_header + shaderStream.str();
+            }
+            else
+            {
+                code = shaderStream.str();
+            }
         }
         catch (std::ifstream::failure& e)
         {
