@@ -1,5 +1,5 @@
-vec3 backgroundColor(vec3 rayDir) {
-   float x = rayDir.y;
+vec3 backgroundColor(vec3 dir) {
+   float x = dir.y;
    bool up = x > 0;
 
    if (up) {
@@ -61,12 +61,10 @@ Hit intersect_sphere(Ray ray, Sphere sphere) {
    
    hit.nextRay.origin = ray.origin + hit.dist*ray.dir;
    vec3 norm = (hit.nextRay.origin - sphere.center)/sphere.radius;
-   hit.nextRay.dir = reflect(ray.dir, norm);
-   //hit.nextRay.dir = randomVec_rad(hit.nextRay.dir, 0.1);
-   hit.material.color = backgroundColor(randomVec_rad(hit.nextRay.dir, 0.1));
-
    hit.nextRay.origin += 20*delta*norm;
-   hit.stopped = true;
+
+   hit.nextRay.dir = reflect(ray.dir, norm);
+
    return hit;
 }
 

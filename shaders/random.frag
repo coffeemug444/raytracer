@@ -24,7 +24,7 @@ float prob_f(float probability) {
 
 vec3 randomVec_rad(vec3 input_vec, float rads) {
    // returns a normally distributed random vector within `rads` radians of input_vec
-   float rotation = rads * (2*rng()-1);
+   float rotation = rads * normal_rng();
    vec3 perp = normalize(cross(input_vec, vec3(rng(),rng(),rng())));
 
    return rotate(input_vec, perp, rads);

@@ -36,6 +36,7 @@ float randomSeed;
 const float delta = 0.00001f;
 const float PI = 3.14159265359;
 const float PI_2 = 6.28318530718;
+const float PI_div4 = .7853981634;
 
 const vec3 coolblue = vec3(0.545, 0.714, 0.988);
 const vec3 darkerblue = 0.4*coolblue;
@@ -54,7 +55,7 @@ float prob_f(float probability);
 vec3 randomVec_rad(vec3 input_vec, float rads);
 
 // SHADER.FRAG
-vec3 backgroundColor(vec3 rayDir);
+vec3 backgroundColor(vec3 dir);
 vec4 quat_mult(vec4 q1, vec4 q2);
 vec3 rotate(vec3 point, vec3 axis, float angle);
 Hit intersect_sphere(Ray ray, Sphere sphere);
